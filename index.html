@@ -248,7 +248,7 @@
   else root.JojoCore = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
-  const LANES = 24, ROW = 3.2, STAGE_ROWS = 24;
+  const LANES = 24, ROW = 3.2, STAGE_ROWS = 28;
   const LEVEL_SPEEDS = Object.freeze([5.4, 5.9, 6.4, 6.9, 7.4]);
   const STAGE_COUNT = LEVEL_SPEEDS.length, TOTAL_ROWS = STAGE_ROWS * STAGE_COUNT;
   const SPEED = LEVEL_SPEEDS[0], GRAVITY = 13.5, JUMP = 6.7;
@@ -272,7 +272,7 @@
     // Every opening is one row long, with a full landing row after it.
     if (local % 4 !== 2) return false;
     const stage = Math.floor(row / STAGE_ROWS);
-    const anchor = [0, 4, 9, 14][Math.floor(local / 4) - 1];
+    const anchor = [0, 4, 9, 14][(Math.floor(local / 4) - 1) % 4];
     return mod(lane - anchor, LANES) < 5 + Math.min(3, stage);
   }
   const SNACKS = ['flake', 'bounty', 'takis'];
