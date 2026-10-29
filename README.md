@@ -31,6 +31,12 @@ Collect **three hearts without falling** to activate a **five-second heart magne
 
 Toolbar buttons now return keyboard focus to the game. A music error arriving before playback or after Pause no longer opens the music controls by itself. Simple comments explain the main parts of the HTML, styling, game code, and tests.
 
+## Smoother drawing and an Arabic ending
+
+The renderer keeps a steady drawing schedule on 60, 90, 120, and 144 Hz displays. Smooth mode limits the canvas size on large screens and automatically lowers drawing detail if the device is struggling. Repeated resize events and unchanged score text no longer rebuild the same content. The tunnel uses reusable letter shapes and draws fewer distant tiles.
+
+After the final win, **بحبك يا روحي** appears in the top bar between the tagline and the music controls. On narrow screens it sits on its own centered row. Going home or restarting hides it again.
+
 ## Included
 
 - Eight selectable runners.
@@ -60,7 +66,7 @@ node tests/game-core.test.cjs
 node tests/ui.test.cjs
 ```
 
-The checks simulate complete runs at 30, 60, and 120 steps per second, and verify checkpoints, retries, safe floor boundaries, landing tiles, collectible placement, heart streaks, and magnet timing. The UI checks use a simulated browser and music player. These checks do not verify real browser layout or streamed music.
+The checks simulate complete runs at 30, 60, and 120 steps per second, and verify checkpoints, retries, safe floor boundaries, landing tiles, collectible placement, heart streaks, and magnet timing. The UI checks cover frame pacing, drawing size limits, resize reuse, automatic graphics scaling, and the Arabic ending, using a simulated browser and music player. These checks do not verify real browser layout or streamed music.
 
 
 ## Rights

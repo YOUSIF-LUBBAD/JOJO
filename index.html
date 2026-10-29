@@ -230,11 +230,18 @@
 .score .streak-status{display:block;margin-top:4px;font-size:10px;font-weight:700;line-height:1.3;color:#954267}
 .score .streak-status.active{color:#b01557}
 .finish-stats{flex-wrap:wrap}
+/* Keep this shade on its own layer instead of repainting it on the canvas. */
+.canvas-shade{position:absolute;inset:0;pointer-events:none;background:linear-gradient(#fbe3efdd,transparent 20%,transparent 82%,#fbe3ef12)}
+.playfield{contain:layout paint}
+/* A little message at the top when the adventure is complete. */
+.win-love{flex:1;min-width:0;padding:0 10px;text-align:center;white-space:nowrap;color:#ad205a;font-family:"Geeza Pro","Noto Naskh Arabic",Tahoma,serif;font-weight:700;font-size:clamp(25px,2.4vw,34px);line-height:1.4}
+.win-love[hidden]{display:none}
+@media(max-width:700px){body.won .topbar{flex-wrap:wrap}.win-love{order:-1;flex-basis:100%;font-size:28px;padding:0}.toolbar{min-width:0}}
 </style></head>
 <body>
 <!-- These are the top buttons and the game screen. -->
-<main class="app" id="app"><header class="topbar"><div class="brand">JOJO<span>♡</span></div><div class="topnote">a little universe for you</div><div class="toolbar"><button id="music-button" class="icon-button" aria-expanded="false" aria-controls="music-panel">♫ Music</button><button id="sound-button" class="icon-button" aria-pressed="true" aria-label="Turn game sound effects off">FX on</button><button id="quality-button" class="icon-button" aria-pressed="false" title="Switch between Smooth and Sharp graphics">⚡ Smooth</button><button id="expand-button" class="icon-button expand-button" aria-pressed="false" aria-label="Make the game bigger" title="Bigger view">⛶</button><button id="pause-button" class="icon-button" aria-label="Pause game" hidden>Ⅱ Pause</button></div></header>
-<section id="game-shell" class="game-shell" aria-label="JOJO tunnel running game"><div class="playfield"><canvas id="game" tabindex="0" aria-label="Pink tunnel. Move with Left and Right or A and D. Jump with Space or Up. Press P to pause.">Your browser needs canvas support to play JOJO.</canvas>
+<main class="app" id="app"><header class="topbar"><div class="brand">JOJO<span>♡</span></div><div class="topnote">a little universe for you</div><div id="win-love" class="win-love" lang="ar" dir="rtl" hidden>بحبك يا روحي</div><div class="toolbar"><button id="music-button" class="icon-button" aria-expanded="false" aria-controls="music-panel">♫ Music</button><button id="sound-button" class="icon-button" aria-pressed="true" aria-label="Turn game sound effects off">FX on</button><button id="quality-button" class="icon-button" aria-pressed="false" title="Switch between Smooth and Sharp graphics">⚡ Smooth</button><button id="expand-button" class="icon-button expand-button" aria-pressed="false" aria-label="Make the game bigger" title="Bigger view">⛶</button><button id="pause-button" class="icon-button" aria-label="Pause game" hidden>Ⅱ Pause</button></div></header>
+<section id="game-shell" class="game-shell" aria-label="JOJO tunnel running game"><div class="playfield"><canvas id="game" tabindex="0" aria-label="Pink tunnel. Move with Left and Right or A and D. Jump with Space or Up. Press P to pause.">Your browser needs canvas support to play JOJO.</canvas><div class="canvas-shade" aria-hidden="true"></div>
 <div class="hud" id="hud" hidden><div class="stage-info"><div id="stage-number" class="eyebrow">Level 01 / 05</div><div id="stage-name" class="stage-name">Sweet beginnings</div></div><div class="progress-box"><div class="progress-label"><span>A little closer to you <b id="pace-label">1.00× pace</b></span><span id="progress-text">0%</span></div><div class="progress-track" role="progressbar" aria-label="Journey progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progress-bar"><div id="progress-fill" class="progress-fill"></div></div></div><div class="score" id="heart-counter">♡ <span id="heart-score">0</span> <small>hearts</small><span class="streak-status" id="streak-status">0 / 3 · heart magnet</span></div></div>
 <div class="route-hint" id="route-hint">FOLLOW YOUR HEART ♡</div><div class="toast" id="toast" role="status" aria-live="polite"></div><div class="shield-indicator" id="shield" hidden>♡ White Peach save ready</div>
 <div class="instructions" id="instructions"><span class="key">←</span><span class="key">→</span> move around the walls <span class="key">space</span> jump</div>
@@ -617,8 +624,8 @@ window.JOJO_ATLAS = 'data:image/webp;base64,UklGRnZvAQBXRUJQVlA4WAoAAAAQAAAA/wIA
   const keys = new Set(), touch = new Map();
   let w = 1000, h = 650, ratio = 1, rotation = 0, last = 0, accumulator = 0;
   let clock = 0, toastTime = 0, hudTime = 0, audio = null, sound = true;
-  let backgroundGradient, vignetteGradient, lastPaint = -1, needsPaint = true;
-  let sharpMode = false, detail = 1, frameAverage = 16.7, levelTime = 0, windowFocused = true;
+  let backgroundGradient, lastPaint = -1, paintClock = 0, needsPaint = true;
+  let sharpMode = false, detail = 1, frameAverage = 16.7, drawAverage = 0, qualityClock = 0, levelTime = 0, windowFocused = true;
   let cameraCos = 1, cameraSin = 0, focal = 500;
   let particles = [], sparks = [], atlasReady = false, lastMode = '';
   let lean = 0, jumpPulse = 0, landingPulse = 0, shake = 0, sparkClock = 0;
@@ -706,20 +713,21 @@ window.JOJO_ATLAS = 'data:image/webp;base64,UklGRnZvAQBXRUJQVlA4WAoAAAAQAAAA/wIA
     needsPaint = true;
   }
   for (const id of Object.keys(runnerNames)) $('choose-'+id).addEventListener('click',()=>chooseCharacter(id));
-  // Fit the drawing to the space on this screen.
+  // Keep the canvas small enough to draw smoothly, even on a large screen.
   function resize() {
     const rect = canvas.getBoundingClientRect();
-    w = Math.max(1, rect.width); h = Math.max(1, rect.height);
-    // Smooth mode draws fewer pixels to help slower devices.
-    ratio = Math.min(window.devicePixelRatio || 1, sharpMode ? 2 : (w < 700 ? 1.4 : 1), Math.max(1, Math.sqrt(2100000 / (w * h))));
-    canvas.width = Math.round(w * ratio); canvas.height = Math.round(h * ratio);
+    const nextW = Math.max(1, rect.width), nextH = Math.max(1, rect.height);
+    const budget = sharpMode ? (detail ? 1800000 : 1200000) : (detail ? 1100000 : 720000);
+    const nextRatio = Math.min(window.devicePixelRatio || 1, sharpMode ? 1.6 : 1.25, Math.sqrt(budget / (nextW * nextH)));
+    const pixelsW = Math.max(1, Math.round(nextW * nextRatio)), pixelsH = Math.max(1, Math.round(nextH * nextRatio));
+    // ResizeObserver can fire twice. Do not clear a canvas that already fits.
+    if (backgroundGradient && canvas.width === pixelsW && canvas.height === pixelsH && w === nextW && h === nextH) return;
+    w = nextW; h = nextH; ratio = nextRatio;
+    canvas.width = pixelsW; canvas.height = pixelsH;
     ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
     focal = Math.min(w * .93, h * .84); needsPaint = true;
     backgroundGradient = ctx.createRadialGradient(w * .5, h * .4, 5, w * .5, h * .4, Math.max(w, h) * .65);
     backgroundGradient.addColorStop(0, '#fbd6e8'); backgroundGradient.addColorStop(.25, '#da82ae'); backgroundGradient.addColorStop(1, '#9a4b7a');
-    vignetteGradient = ctx.createLinearGradient(0, 0, 0, h);
-    vignetteGradient.addColorStop(0, '#fbe3efdd'); vignetteGradient.addColorStop(.2, '#fbe3ef00');
-    vignetteGradient.addColorStop(.82, '#fbe3ef00'); vignetteGradient.addColorStop(1, '#fbe3ef12');
   }
   window.addEventListener('resize', resize);
   if (window.ResizeObserver) new ResizeObserver(resize).observe(canvas);
@@ -786,6 +794,7 @@ window.JOJO_ATLAS = 'data:image/webp;base64,UklGRnZvAQBXRUJQVlA4WAoAAAAQAAAA/wIA
     resize();
     if (state.mode === 'playing') canvas.focus({ preventScroll: true });
   });
+  function setText(id, text) { const node = $(id); if (node.textContent !== String(text)) node.textContent = String(text); }
   function announce(text) { $('game-status').textContent = text; }
   function toast(text, duration = 3.2) { $('toast').textContent = text; $('toast').classList.add('show'); toastTime = duration; }
   // Stop held keys and touches from sticking.
@@ -804,6 +813,7 @@ window.JOJO_ATLAS = 'data:image/webp;base64,UklGRnZvAQBXRUJQVlA4WAoAAAAQAAAA/wIA
     $('instructions').hidden = !active;
     $('route-hint').hidden = !active;
     $('shield').hidden = !state.shield || !active;
+    $('win-love').hidden = state.mode !== 'won';
     if (state.mode !== lastMode) {
       if (state.mode === 'fallen') $('retry-button').focus({ preventScroll: true });
       if (state.mode === 'paused') $('resume-button').focus({ preventScroll: true });
@@ -896,16 +906,18 @@ window.JOJO_ATLAS = 'data:image/webp;base64,UklGRnZvAQBXRUJQVlA4WAoAAAAQAAAA/wIA
   }
   // Update the level name, hearts, and progress bar.
   function updateHud() {
-    $('stage-number').textContent = `Level 0${state.stage + 1} / 0${C.STAGE_COUNT}`;
-    $('stage-name').textContent = names[state.stage];
-    $('pace-label').textContent = `${(state.speed / C.SPEED).toFixed(2)}× pace`;
-    const percent = Math.min(100, Math.floor(state.z / (C.TOTAL_DISTANCE) * 100));
-    $('progress-text').textContent = `${percent}%`; $('progress-fill').style.width = `${percent}%`;
-    $('progress-bar').setAttribute('aria-valuenow', String(percent));
-    $('heart-score').textContent = state.hearts;
-    $('streak-status').textContent = state.magnetTime > 0
+    setText('stage-number', `Level 0${state.stage + 1} / 0${C.STAGE_COUNT}`);
+    setText('stage-name', names[state.stage]);
+    setText('pace-label', `${(state.speed / C.SPEED).toFixed(2)}× pace`);
+    const percent = Math.min(100, Math.floor(state.z / C.TOTAL_DISTANCE * 100));
+    if ($('progress-text').textContent !== `${percent}%`) {
+      setText('progress-text', `${percent}%`); $('progress-fill').style.width = `${percent}%`;
+      $('progress-bar').setAttribute('aria-valuenow', String(percent));
+    }
+    setText('heart-score', state.hearts);
+    setText('streak-status', state.magnetTime > 0
       ? `♡ Heart magnet · ${Math.ceil(state.magnetTime)}s`
-      : `${state.heartStreak % 3} / 3 · heart magnet`;
+      : `${state.heartStreak % 3} / 3 · heart magnet`);
     $('streak-status').classList.toggle('active', state.magnetTime > 0);
     $('shield').hidden = !state.shield || state.mode !== 'playing';
   }
@@ -976,7 +988,7 @@ window.JOJO_ATLAS = 'data:image/webp;base64,UklGRnZvAQBXRUJQVlA4WAoAAAAQAAAA/wIA
       shake = reduced ? 0 : event.kind === 'heart' ? 1 : .5;
       if (event.kind === 'heart') {
         const score = $('heart-counter');
-        score.classList.remove('pop'); void score.offsetWidth; score.classList.add('pop');
+        if (!reduced) score.animate?.([{transform:'scale(1)'}, {transform:'scale(1.13)'}, {transform:'scale(1)'}], {duration:320, easing:'ease-out'});
       }
       tone(784, .18, 0, .025); tone(1175, .23, .055, .018); tone(1568, .25, .11, .009);
     }
@@ -1040,6 +1052,11 @@ window.JOJO_ATLAS = 'data:image/webp;base64,UklGRnZvAQBXRUJQVlA4WAoAAAAQAAAA/wIA
     }
     return { solid, gaps, letters, fragile };
   });
+  // Reuse these small shapes instead of drawing new font sizes every frame.
+  const wallMarks = {
+    J: new Path2D('M -.3 -.6 L .4 -.6 L .4 -.36 L .2 -.36 L .2 .2 Q .2 .65 -.28 .65 Q -.6 .65 -.6 .3 L -.34 .3 Q -.34 .4 -.24 .4 Q -.08 .4 -.08 .18 L -.08 -.36 L -.3 -.36 Z'),
+    heart: new Path2D('M 0 .65 C -1.4 -.15 -.65 -1.1 0 -.5 C .65 -1.1 1.4 -.15 0 .65 Z')
+  };
   const tileColors = Array.from({ length: C.STAGE_COUNT }, (_, stage) => [81, 84, 87, 90].map(light => `hsl(${335 + stage * 2} 68% ${light}%)`));
   function tileGroup(lanes, fill, stroke, width = 1) {
     let count = 0; ctx.beginPath();
@@ -1103,7 +1120,7 @@ window.JOJO_ATLAS = 'data:image/webp;base64,UklGRnZvAQBXRUJQVlA4WAoAAAAQAAAA/wIA
     if (!reduced && moving) ctx.translate(Math.sin(clock * 93) * shake, Math.cos(clock * 117) * shake * .6);
     ctx.globalAlpha = 1;
     const first = Math.max(0, Math.floor((travel - 5.8) / C.ROW));
-    const furthest = Math.min(C.TOTAL_ROWS + 7, Math.floor(travel / C.ROW) + (detail === 0 ? 15 : 20));
+    const furthest = Math.min(C.TOTAL_ROWS + 7, Math.floor(travel / C.ROW) + (detail === 0 ? 12 : 16));
     for (let row = furthest; row >= first; row--) {
       const near = Math.max(.9, row * C.ROW - travel + 7), far = (row + 1) * C.ROW - travel + 7;
       if (far <= .9) continue;
@@ -1142,8 +1159,9 @@ window.JOJO_ATLAS = 'data:image/webp;base64,UklGRnZvAQBXRUJQVlA4WAoAAAAQAAAA/wIA
         for (const lane of geometry.letters) {
           if (!tileVisible[lane] || C.isOpen(state, row, lane)) continue;
           const point = project(lane + .5, (near + far) * .5, .015);
-          ctx.font = `900 ${Math.max(4, point.scale * .24)}px Arial`;
-          ctx.fillText((row + lane) % 2 ? 'J' : '♡', point.x, point.y);
+          const size = Math.max(4, point.scale * .18);
+          ctx.save(); ctx.translate(point.x, point.y - size * .25); ctx.scale(size, size);
+          ctx.fill(wallMarks[(row + lane) % 2 ? 'J' : 'heart']); ctx.restore();
         }
         ctx.restore();
       }
@@ -1211,26 +1229,25 @@ window.JOJO_ATLAS = 'data:image/webp;base64,UklGRnZvAQBXRUJQVlA4WAoAAAAQAAAA/wIA
     }
     drawParticles(particles, feelDt);
     ctx.restore();
-    ctx.fillStyle = vignetteGradient; ctx.fillRect(0, 0, w, h);
+
   }
   // Keep movement steady even when drawing gets slower.
   function frame(now) {
-    if (document.hidden) { last = now; requestAnimationFrame(frame); return; }
+    if (document.hidden) { last = now; paintClock = 0; requestAnimationFrame(frame); return; }
     const dt = Math.min(.05, Math.max(0, (now - last) / 1000 || 0)); last = now;
     if (state.mode === 'playing' && dt > 0) {
       frameAverage += (dt * 1000 - frameAverage) * .025;
-      if (frameAverage > 23) detail = 0;
-      else if (frameAverage < 18.5) detail = 1;
+      qualityClock += dt;
     }
     if (state.mode === 'levelup' && windowFocused && !favoriteDialog.open) {
       levelTime -= dt;
-      $('level-countdown').textContent = `The next level starts in ${Math.max(1, Math.ceil(levelTime))}…`;
+      setText('level-countdown', `The next level starts in ${Math.max(1, Math.ceil(levelTime))}…`);
       if (levelTime <= 0) nextLevel();
     }
     if (state.mode === 'playing') {
       accumulator += dt;
       while (accumulator >= 1 / 120) {
-        previous = { z: state.z, lane: state.lane, height: state.height };
+        previous.z = state.z; previous.lane = state.lane; previous.height = state.height;
         const fallingSpeed = state.vy;
         C.step(state, 1 / 120, direction());
         if (previous.height > .005 && state.height === 0 && fallingSpeed < -1 && state.mode === 'playing') {
@@ -1242,17 +1259,31 @@ window.JOJO_ATLAS = 'data:image/webp;base64,UklGRnZvAQBXRUJQVlA4WAoAAAAQAAAA/wIA
       }
     } else accumulator = 0;
     if (toastTime > 0) { toastTime -= dt; if (toastTime <= 0) $('toast').classList.remove('show'); }
-    hudTime += dt; if (hudTime > .1) { updateHud(); hudTime = 0; }
+    hudTime += dt; if (state.mode === 'playing' && hudTime > .1) { updateHud(); hudTime = 0; }
     // Smooth the drawing between movement steps.
     const alpha = state.mode === 'playing' ? accumulator * 120 : 1;
     visual.z = previous.z + (state.z - previous.z) * alpha;
     visual.height = previous.height + (state.height - previous.height) * alpha;
     visual.lane = C.mod(previous.lane + (C.mod(state.lane - previous.lane + C.LANES / 2, C.LANES) - C.LANES / 2) * alpha, C.LANES);
     const animate = state.mode === 'playing' || (state.mode === 'won' && particles.length > 0);
-    const interval = 1000 / (state.mode === 'playing' ? 60 : 24);
-    if (needsPaint || (animate && now - lastPaint >= interval - .5)) {
+    const interval = 1 / (state.mode === 'playing' ? 60 : 24);
+    paintClock += dt;
+    // Keep the leftover time so 90 Hz and 144 Hz screens do not skip extra frames.
+    if (needsPaint || (animate && paintClock + .0001 >= interval)) {
       const paintDt = lastPaint < 0 ? dt : Math.min(.08, Math.max(0, (now - lastPaint) / 1000));
-      render(paintDt); lastPaint = now; needsPaint = false;
+      const before = performance.now();
+      render(paintDt);
+      const cost = performance.now() - before;
+      drawAverage = drawAverage ? drawAverage + (cost - drawAverage) * .05 : cost;
+      lastPaint = now;
+      paintClock = Math.max(0, paintClock - Math.floor((paintClock + .0001) / interval) * interval);
+      needsPaint = false;
+      // Lower the drawing load if this device is struggling. Keep game speed the same.
+      if (state.mode === 'playing' && qualityClock > 2 && detail && (drawAverage > 10 || frameAverage > 24)) {
+        detail = 0; qualityClock = 0; resize();
+      } else if (state.mode === 'playing' && qualityClock > 8 && !detail && drawAverage < 5 && frameAverage < 18) {
+        detail = 1; qualityClock = 0; resize();
+      }
     }
     requestAnimationFrame(frame);
   }
