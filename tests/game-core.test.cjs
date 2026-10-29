@@ -74,10 +74,37 @@ function runChecks(C) {
     let safeLanes = 0;
     for (let lane = 0; lane < C.LANES; lane++) {
       if (!C.isGap(row, lane)) safeLanes++;
-      else verify(!C.isGap(row + 1, lane), 'A gap must be followed by a landing tile.');
+      else verify(!C.isGap(row + 1, lane) && !C.isFragile(row + 1, lane), 'A gap must be followed by solid landing floor.');
     }
     verify(safeLanes > 0, 'Every row needs a safe route.');
   }
+  // More hazards, with room to steer around them.
+  for (let stage = 0; stage < C.STAGE_COUNT; stage++) {
+    const first = C.LEVEL_START_ROWS[stage], last = Math.floor(C.LEVEL_ENDS[stage] / C.ROW);
+    let gaps = 0, cracks = 0;
+    for (let row = first; row < last; row++) {
+      for (let lane = 0; lane < C.LANES; lane++) {
+        if (C.isGap(row, lane)) gaps++;
+        if (C.isFragile(row, lane)) cracks++;
+      }
+    }
+    const oldGapRate = 6 * (5 + Math.min(3, stage)) / (32 * 24);
+    const oldCrackRate = stage === 0 ? 0 : 6 / (32 * 24);
+    verify(gaps / ((last - first) * 24) > oldGapRate, 'Every level needs more gaps than before.');
+    verify(cracks / ((last - first) * 24) > oldCrackRate, 'Every level needs more breakaway floor than before.');
+  }
+  // Cracked floor really breaks, and jumping over it is safe.
+  const crackRow = C.LEVEL_START_ROWS[1] + 8;
+  const crackLane = Array.from({length: 24}, (_, lane) => lane).find(lane => C.isFragile(crackRow, lane));
+  const cracked = C.makeState(); C.reset(cracked);
+  Object.assign(cracked, {stage: 1, checkpoint: 1, speed: C.LEVEL_SPEEDS[1], z: crackRow * C.ROW + .01, lane: crackLane + .5});
+  for (let i = 0; i < 32; i++) C.step(cracked, 1 / 120, 0);
+  verify(C.isOpen(cracked, crackRow, crackLane) && cracked.height < 0, 'Stepped-on cracked floor must open.');
+  C.retry(cracked);
+  verify(!C.isOpen(cracked, crackRow, crackLane), 'Retry repairs the floor.');
+  Object.assign(cracked, {z: crackRow * C.ROW + .01, lane: crackLane + .5});
+  C.jump(cracked); C.step(cracked, 1 / 120, 0);
+  verify(Object.keys(cracked.fragile).length === 0, 'Jumping avoids cracking the floor.');
   // Make sure all favorites appear and none share an ID.
   const ids = new Set(), kinds = new Set();
   for (let row = 0; row <= C.TOTAL_ROWS; row++) {

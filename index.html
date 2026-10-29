@@ -291,12 +291,13 @@ window.JOJO_ATLAS = 'data:image/webp;base64,UklGRnZvAQBXRUJQVlA4WAoAAAAQAAAA/wIA
     const stage = stageForRow(row);
     return row < LEVEL_START_ROWS[stage] + 4 || row >= Math.floor(LEVEL_ENDS[stage] / ROW) - 4;
   }
-  const BREAK_DELAY = .42;
+  const BREAK_DELAY = .22;
   // These tiles break after the runner steps on them.
   function isFragile(row, lane) {
     const stage = stageForRow(row), local = row - LEVEL_START_ROWS[stage];
-    return stage > 0 && !isSafeRow(row) && (local === 8 || local === 16)
-      && mod(Math.floor(lane) - (stage * 4 + local / 4), LANES) < 3;
+    const spacing = stage === 0 ? 16 : 8;
+    return !isSafeRow(row) && local % spacing === 0 && !isGap(row, lane) && !isGap(row - 1, lane) && !isGap(row + 1, lane)
+      && mod(Math.floor(lane) - (stage * 4 + local / 4), LANES) < (stage === 0 ? 3 : 4);
   }
   function isOpen(s, row, lane) {
     return isGap(row, lane) || (s.fragile[row * LANES + mod(Math.floor(lane), LANES)] || 0) >= BREAK_DELAY;
@@ -307,9 +308,10 @@ window.JOJO_ATLAS = 'data:image/webp;base64,UklGRnZvAQBXRUJQVlA4WAoAAAAQAAAA/wIA
     if (row < 5 || isSafeRow(row)) return false;
     const stage = stageForRow(row), local = row - LEVEL_START_ROWS[stage];
     // Leave a safe landing tile after each hole.
-    if (local % 4 !== 2) return false;
-    const anchor = [0, 4, 9, 14][(Math.floor(local / 4) - 1) % 4];
-    return mod(lane - anchor, LANES) < 5 + Math.min(3, stage);
+    const spacing = stage < 2 ? 4 : 3;
+    if (local % spacing !== 2) return false;
+    const anchor = [0, 4, 9, 14][(Math.floor(local / spacing) - 1) % 4];
+    return mod(lane - anchor, LANES) < 6 + Math.min(3, stage);
   }
   const SNACKS = ['flake', 'bounty', 'takis'];
   // Make the hearts and snacks once when the game loads.
