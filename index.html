@@ -266,10 +266,10 @@ window.JOJO_ATLAS = 'data:image/webp;base64,UklGRnZvAQBXRUJQVlA4WAoAAAAQAAAA/wIA
   else root.JojoCore = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
-  // Longer floor tiles make the trip 20% longer at the same speed.
+  // This is the size of each floor tile.
   const LANES = 24, ROW = 3.84, STAGE_ROWS = 32;
-  // Each new level is a little faster.
-  const LEVEL_SPEEDS = Object.freeze([5.4, 5.9, 6.4, 6.9, 7.4]);
+  // Each level is 25% faster than before.
+  const LEVEL_SPEEDS = Object.freeze([6.75, 7.375, 8, 8.625, 9.25]);
   const STAGE_COUNT = LEVEL_SPEEDS.length, TOTAL_ROWS = STAGE_ROWS * STAGE_COUNT;
   const SPEED = LEVEL_SPEEDS[0], GRAVITY = 13.5, JUMP = 6.7;
   const TREAT_KINDS = ['cat_brown', 'peach', 'takis', 'cat_grey', 'matcha', 'nescafe', 'makeup', 'phone', 'shopping', 'flake', 'bounty'];

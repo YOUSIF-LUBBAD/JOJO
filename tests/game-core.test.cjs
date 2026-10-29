@@ -18,8 +18,9 @@ function runChecks(C) {
   const verify = (condition, message) => { if (!condition) throw new Error(message); };
   const results = [];
   verify(C.STAGE_COUNT === 5, 'The adventure must have five levels.');
-  verify(Math.abs(C.STAGE_ROWS * C.ROW / (32 * 3.2) - 1.2) < 1e-10, 'Each level must be 20 percent longer than the previous version.');
-  verify(JSON.stringify(C.LEVEL_SPEEDS) === JSON.stringify([5.4, 5.9, 6.4, 6.9, 7.4]), 'Keep the existing speed progression.');
+  const previousSpeeds = [5.4, 5.9, 6.4, 6.9, 7.4];
+  const expectedDurations = C.LEVEL_SPEEDS.map(speed => 122.88 / speed);
+  verify(C.LEVEL_SPEEDS.every((speed, i) => Math.abs(speed / previousSpeeds[i] - 1.25) < 1e-10), 'Every level must be 25 percent faster.');
   // Try the full trip at different frame rates.
   for (const fps of [30, 60, 120]) {
     const state = C.makeState();
@@ -44,8 +45,7 @@ function runChecks(C) {
     verify(state.mode === 'won', 'The full journey must finish at ' + fps + ' fps.');
     verify(JSON.stringify(visited) === '[0,1,2,3,4]', 'Visit each of the five levels in order.');
     verify(state.checkpoint === 4, 'The final checkpoint must be level five.');
-    verify(state.runTime > 97 && state.runTime < 98, 'The longer route should take about 97 seconds without pauses.');
-    verify(durations.every(time => time > 16 && time < 24), 'Each level should take about 17–23 seconds.');
+    verify(durations.every((time, i) => Math.abs(time - expectedDurations[i]) < 2 / fps), 'Each level must finish at the expected time.');
     results.push(fps + ' fps: all five levels finished in ' + state.runTime.toFixed(2) + ' seconds.');
   }
   // Check that each retry starts on safe floor.
