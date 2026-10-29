@@ -279,10 +279,10 @@ window.JOJO_ATLAS = 'data:image/webp;base64,UklGRnZvAQBXRUJQVlA4WAoAAAAQAAAA/wIA
   'use strict';
   // This is the size of each floor tile.
   const LANES = 24, ROW = 3.84;
-  // Each level is 25% faster than before.
-  const LEVEL_SPEEDS = Object.freeze([6.75, 7.375, 8, 8.625, 9.25]);
-  // These distances keep each level five seconds longer, even at the new speed.
-  const LEVEL_LENGTHS = Object.freeze([187.35, 190.475, 193.6, 196.725, 199.85]);
+  // Start at the old level two speed, then keep getting faster.
+  const LEVEL_SPEEDS = Object.freeze([7.375, 8, 8.625, 9.25, 9.875]);
+  // Keep the same time to finish each level at the faster pace.
+  const LEVEL_LENGTHS = Object.freeze([204.697222, 206.616949, 208.725, 210.980435, 213.353378]);
   const LEVEL_ENDS = Object.freeze(LEVEL_LENGTHS.map((_, i) => LEVEL_LENGTHS.slice(0, i + 1).reduce((a, b) => a + b, 0)));
   const LEVEL_STARTS = Object.freeze([0, ...LEVEL_ENDS.slice(0, -1)]);
   const LEVEL_START_ROWS = Object.freeze(LEVEL_STARTS.map(z => Math.floor(z / ROW)));

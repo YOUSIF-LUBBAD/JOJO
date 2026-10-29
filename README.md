@@ -15,15 +15,17 @@ A little pink universe for JOJO, from Yousif.
 
 ## October 29, 2026 update
 
-Every level now runs **25% faster** and lasts **five seconds longer** than the previous version. A clean run takes roughly **122 seconds** of gameplay, plus the celebrations between levels.
+The speed progression has moved up one level: level 1 uses the former level 2 speed, level 2 uses the former level 3 speed, and so on. Level 5 adds one more step, from 9.25 to **9.875**, about **6.8% faster** than the former final level.
 
-| Level | Previous time | New running time |
+Each level keeps its running time from the previous update, so a clean run still takes roughly **122 seconds**, plus celebrations. The optimized renderer, automatic graphics scaling, and frame pacing are unchanged.
+
+| Level | Running speed | Running time |
 | --- | ---: | ---: |
-| 1 | 22.76 seconds | 27.76 seconds |
-| 2 | 20.83 seconds | 25.83 seconds |
-| 3 | 19.20 seconds | 24.20 seconds |
-| 4 | 17.81 seconds | 22.81 seconds |
-| 5 | 16.61 seconds | 21.61 seconds |
+| 1 | 7.375 | 27.76 seconds |
+| 2 | 8 | 25.83 seconds |
+| 3 | 8.625 | 24.20 seconds |
+| 4 | 9.25 | 22.81 seconds |
+| 5 | 9.875 | 21.61 seconds |
 
 There are more gaps and cracked tiles in every level. Later levels have more frequent gaps. Starts, finishes, and landing tiles stay safe, and every row has a route around its hazards.
 

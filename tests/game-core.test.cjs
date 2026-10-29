@@ -18,9 +18,11 @@ function runChecks(C) {
   const verify = (condition, message) => { if (!condition) throw new Error(message); };
   const results = [];
   verify(C.STAGE_COUNT === 5, 'The adventure must have five levels.');
-  const previousSpeeds = [5.4, 5.9, 6.4, 6.9, 7.4];
-  const expectedDurations = previousSpeeds.map(speed => 122.88 / speed + 5);
-  verify(C.LEVEL_SPEEDS.every((speed, i) => Math.abs(speed / previousSpeeds[i] - 1.25) < 1e-10), 'Every level must be 25 percent faster.');
+  const previousSpeeds = [6.75, 7.375, 8, 8.625, 9.25];
+  const previousLengths = [187.35, 190.475, 193.6, 196.725, 199.85];
+  const expectedDurations = previousLengths.map((length, i) => length / previousSpeeds[i]);
+  verify(C.LEVEL_SPEEDS.slice(0, 4).every((speed, i) => speed === previousSpeeds[i + 1]), 'Levels one to four use the next old level speed.');
+  verify(C.LEVEL_SPEEDS[4] === 9.875, 'Level five continues the same speed increase.');
   // Try the full trip at different frame rates.
   for (const fps of [30, 60, 120]) {
     const state = C.makeState();
