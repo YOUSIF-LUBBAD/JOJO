@@ -427,8 +427,10 @@
     clearTimeout(timeout); wanted = playing = false; panel.hidden = false;
     hint('Tap ▶ to start your song.'); update();
   }
-  function unavailable(event) {
-    clearTimeout(timeout); wanted = playing = false;
+  function unavailable() {
+    clearTimeout(timeout);
+    if (!wanted || suspended) { playing = false; update(); return; }
+    wanted = playing = false;
     panel.hidden = false;
     const isFile = window.location.protocol === 'file:';
     hint(isFile ? 'Songs work on your website. Open JOJO online to play music.' : 'This song couldn’t play here. Try another song, or tap Play to retry.', true);
@@ -503,7 +505,7 @@
     selected = catalog[(index + direction + catalog.length) % catalog.length].key;
     playing = false; play(false);
   }
-  toggle.addEventListener('click', () => { panel.hidden = !panel.hidden; update(); });
+  toggle.addEventListener('click', () => { panel.hidden = !panel.hidden; update(); focusGame(); });
   $('close-music').addEventListener('click', () => { panel.hidden = true; update(); focusGame(); });
   playButton.addEventListener('click', () => { if (playing || wanted) pause(); else play(); focusGame(); });
   $('music-prev').addEventListener('click', () => { stepSong(-1); focusGame(); });
@@ -643,10 +645,12 @@
   window.addEventListener('resize', resize);
   if (window.ResizeObserver) new ResizeObserver(resize).observe(canvas);
   resize();
+  function focusRunner() { if (state.mode === 'playing') canvas.focus({ preventScroll: true }); }
   function updateGraphics() { $('quality-button').textContent = sharpMode ? '✦ Sharp' : '⚡ Smooth'; $('quality-button').setAttribute('aria-pressed', String(sharpMode)); }
   $('quality-button').addEventListener('click', () => {
     sharpMode = !sharpMode; updateGraphics(); resize();
     try { localStorage.setItem('jojo-graphics', sharpMode ? 'sharp' : 'smooth'); } catch {}
+    focusRunner();
   });
   updateGraphics();
   function tone(freq, duration = .12, delay = 0, gain = .04, type = 'sine', endFreq = freq) {
@@ -672,6 +676,7 @@
   $('sound-button').addEventListener('click', () => {
     sound = !sound; unlockAudio(); updateSound(); tone(659);
     try { localStorage.setItem('jojo-effects', sound ? 'on' : 'off'); } catch {}
+    focusRunner();
   });
   updateSound();
   const music = window.JojoMusic;
@@ -688,7 +693,7 @@
   $('close-phone').addEventListener('click', () => phoneDialog.close());
   phoneDialog.addEventListener('click', event => { if (event.target === phoneDialog) phoneDialog.close(); });
   phoneDialog.addEventListener('close', syncDancers);
-  music.setFocusHandler(() => { if (state.mode === 'playing') canvas.focus({ preventScroll: true }); });
+  music.setFocusHandler(focusRunner);
   let expanded = false;
   $('expand-button').addEventListener('click', () => {
     expanded = !expanded;
