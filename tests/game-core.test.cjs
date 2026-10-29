@@ -1,7 +1,7 @@
 'use strict';
 
 // Run with: node tests/game-core.test.cjs
-// Read the exact game shipped to GitHub Pages, so the tests cannot drift from it.
+// Test the same game file that players open.
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
@@ -19,6 +19,7 @@ function runChecks(C) {
   verify(C.STAGE_COUNT === 5, 'The adventure must have five levels.');
   verify(Math.abs(C.STAGE_ROWS * C.ROW / (32 * 3.2) - 1.2) < 1e-10, 'Each level must be 20 percent longer than the previous version.');
   verify(JSON.stringify(C.LEVEL_SPEEDS) === JSON.stringify([5.4, 5.9, 6.4, 6.9, 7.4]), 'Keep the existing speed progression.');
+  // Try the full trip at different frame rates.
   for (const fps of [30, 60, 120]) {
     const state = C.makeState();
     C.reset(state);
@@ -46,6 +47,7 @@ function runChecks(C) {
     verify(durations.every(time => time > 16 && time < 24), 'Each level should take about 17–23 seconds.');
     results.push(fps + ' fps: all five levels finished in ' + state.runTime.toFixed(2) + ' seconds.');
   }
+  // Check that each retry starts on safe floor.
   for (let stage = 0; stage < C.STAGE_COUNT; stage++) {
     const state = C.makeState();
     C.reset(state);
@@ -64,6 +66,7 @@ function runChecks(C) {
       }
     }
   }
+  // Every hole needs a safe place to land.
   for (let row = 0; row < C.TOTAL_ROWS; row++) {
     let safeLanes = 0;
     for (let lane = 0; lane < C.LANES; lane++) {
@@ -72,6 +75,7 @@ function runChecks(C) {
     }
     verify(safeLanes > 0, 'Every row needs a safe route.');
   }
+  // Make sure all favorites appear and none share an ID.
   const ids = new Set(), kinds = new Set();
   for (let row = 0; row <= C.TOTAL_ROWS; row++) {
     for (const item of C.pickupsFor(row)) {
