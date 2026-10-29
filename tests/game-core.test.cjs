@@ -1,3 +1,4 @@
+// Copyright (c) 2026 Yousif Lubbad. See LICENSE.
 'use strict';
 
 // Run with: node tests/game-core.test.cjs

@@ -13,20 +13,19 @@ A little pink universe for JOJO, from Yousif.
 - Each of the five levels gets faster. Falling restarts the current level with unlimited retries.
 - After the final win, choose **Back to home ♡** to pick a runner and play again.
 
-## October 20, 2026 update
+## October 29, 2026 update
 
-Each level now has **32 floor rows**, up from 28: about **14% longer** at the same speed.
-A clean run takes roughly **81 seconds** of gameplay, plus the celebrations between levels.
+The route is now **20% longer**, with the same five levels and speed progression. A clean run takes roughly **97 seconds** of gameplay, plus the celebrations between levels. The earlier version took about 81 seconds.
 
 | Level | Approximate running time |
 | --- | ---: |
-| 1 | 19 seconds |
-| 2 | 17 seconds |
-| 3 | 16 seconds |
-| 4 | 15 seconds |
-| 5 | 14 seconds |
+| 1 | 23 seconds |
+| 2 | 21 seconds |
+| 3 | 19 seconds |
+| 4 | 18 seconds |
+| 5 | 17 seconds |
 
-The route still has safe starting and finishing sections, landing tiles after gaps, and a checkpoint at every level.
+Toolbar buttons now return keyboard focus to the game. A music error arriving before playback or after Pause no longer opens the music controls by itself. Simple comments explain the main parts of the HTML, styling, game code, and tests.
 
 ## Included
 
@@ -42,6 +41,8 @@ Music requires an internet connection and may need an initial tap on Play. Avail
 
 - **index.html** is the complete game. Artwork, dance clips, styling, and game scripts are embedded in it.
 - **tests/game-core.test.cjs** checks the engine inside that same HTML file.
+- **tests/ui.test.cjs** checks toolbar focus, music errors, pause/resume, and returning home.
+- **LICENSE** and **THIRD_PARTY_NOTICES.md** describe the rights notice and asset credits.
 
 GitHub Pages publishes the game from the repository's main branch.
 For future updates, make a focused change, check it, and commit it with a message describing that change.
@@ -52,6 +53,14 @@ With Node.js installed, run this command from the repository folder:
 
 ```sh
 node tests/game-core.test.cjs
+node tests/ui.test.cjs
 ```
 
-The checks simulate complete runs at 30, 60, and 120 steps per second, and verify checkpoints, retries, safe floor boundaries, landing tiles, and collectible placement. These are engine checks; they do not test browser rendering or streamed music.
+The checks simulate complete runs at 30, 60, and 120 steps per second, and verify checkpoints, retries, safe floor boundaries, landing tiles, and collectible placement. The UI checks use a simulated browser and music player. These checks do not verify real browser layout or streamed music.
+
+
+## Rights
+
+© 2026 Yousif Lubbad, for original copyrightable contributions owned by Yousif Lubbad. See [LICENSE](LICENSE) for the permission to play and limits on reuse.
+
+Third-party artwork, brands, and recordings are excluded. Their credits and known permission limits are in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). This is a rights notice, not a registration or a commercial-use clearance.

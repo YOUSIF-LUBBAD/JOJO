@@ -1,3 +1,4 @@
+// Copyright (c) 2026 Yousif Lubbad. See LICENSE.
 'use strict';
 
 // This checks the buttons without downloading pictures or songs.
