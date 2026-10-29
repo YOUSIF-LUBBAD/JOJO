@@ -115,6 +115,50 @@ function runChecks(C) {
     }
   }
   verify(C.TREAT_KINDS.every(kind => kinds.has(kind)) && kinds.has('heart'), 'Keep every favorite and hearts in the adventure.');
+  // A heart streak gives a short magnet, not extra free hearts.
+  const hearts = [];
+  for (let row = 0; row < C.TOTAL_ROWS; row++) hearts.push(...C.pickupsFor(row).filter(p => p.kind === 'heart'));
+  function placeByItem(state, item, laneOffset = 0) {
+    const stage = C.stageAtDistance(item.z), pose = C.pickupPose(item, 0);
+    Object.assign(state, {stage, checkpoint: stage, speed: C.LEVEL_SPEEDS[stage],
+      z: item.z - .1, lane: C.mod(pose.lane + laneOffset, C.LANES), height: .6, vy: 0, reducedMotion: true});
+  }
+  const bonus = C.makeState(); C.reset(bonus);
+  for (let i = 0; i < 3; i++) {
+    placeByItem(bonus, hearts[i]); C.step(bonus, 1 / 120, 0);
+    verify(bonus.hearts === i + 1 && bonus.heartStreak === i + 1, 'A heart counts once toward the streak.');
+    verify(bonus.magnetTime === (i === 2 ? 5 : 0), 'Only the third heart starts the magnet.');
+  }
+  verify(bonus.event.streakBonus && bonus.bestHeartStreak === 3, 'The bonus reaches the screen and saves the best streak.');
+  const count = bonus.hearts;
+  C.step(bonus, 1 / 120, 0);
+  verify(bonus.hearts === count, 'The magnet must not collect the same heart twice.');
+  for (const mode of ['paused', 'levelup']) {
+    bonus.mode = mode; const time = bonus.magnetTime, distance = bonus.z;
+    C.step(bonus, 1 / 30, 1);
+    verify(bonus.magnetTime === time && bonus.z === distance, 'Pauses and celebrations freeze the bonus.');
+  }
+  bonus.mode = 'playing';
+  const ordinary = C.makeState(); C.reset(ordinary);
+  placeByItem(ordinary, hearts[3], 1.7); C.step(ordinary, 1 / 120, 0);
+  verify(!ordinary.collected.has(hearts[3].id), 'A distant heart stays out of normal reach.');
+  placeByItem(bonus, hearts[3], 1.7); C.step(bonus, 1 / 120, 0);
+  verify(bonus.collected.has(hearts[3].id), 'The magnet pulls a nearby heart into reach.');
+  placeByItem(bonus, hearts[4], 1.7); bonus.magnetTime = .001;
+  C.step(bonus, 1 / 120, 0);
+  verify(bonus.magnetTime === 0 && !bonus.collected.has(hearts[4].id), 'The magnet stops when its timer ends.');
+  bonus.height = -2; bonus.vy = -1; bonus.shield = true;
+  const streak = bonus.heartStreak;
+  C.step(bonus, 1 / 120, 0);
+  verify(bonus.event.type === 'rescue' && bonus.heartStreak === streak, 'A White Peach save keeps the streak.');
+  bonus.height = -2; bonus.vy = -1; bonus.magnetTime = 4;
+  C.step(bonus, 1 / 120, 0);
+  verify(bonus.mode === 'fallen' && bonus.heartStreak === 0 && bonus.magnetTime === 0, 'A fall clears the current streak and bonus.');
+  C.retry(bonus);
+  verify(bonus.bestHeartStreak === 4 && bonus.heartStreak === 0, 'Retry keeps the best streak from this adventure.');
+  C.reset(bonus);
+  verify(bonus.bestHeartStreak === 0 && bonus.magnetTime === 0 && bonus.hearts === 0, 'A fresh adventure clears the old bonus and score.');
+  results.push('Heart streaks, bonus reach, expiry, pauses, shield saves, falls, and resets passed.');
   results.push('Checkpoints, safe starts/finishes, gap landings, and collectible placement passed.');
   return results;
 

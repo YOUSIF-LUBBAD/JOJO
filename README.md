@@ -15,15 +15,19 @@ A little pink universe for JOJO, from Yousif.
 
 ## October 29, 2026 update
 
-The route is now **20% longer**, with the same five levels and speed progression. A clean run takes roughly **97 seconds** of gameplay, plus the celebrations between levels. The earlier version took about 81 seconds.
+Every level now runs **25% faster** and lasts **five seconds longer** than the previous version. A clean run takes roughly **122 seconds** of gameplay, plus the celebrations between levels.
 
-| Level | Approximate running time |
-| --- | ---: |
-| 1 | 23 seconds |
-| 2 | 21 seconds |
-| 3 | 19 seconds |
-| 4 | 18 seconds |
-| 5 | 17 seconds |
+| Level | Previous time | New running time |
+| --- | ---: | ---: |
+| 1 | 22.76 seconds | 27.76 seconds |
+| 2 | 20.83 seconds | 25.83 seconds |
+| 3 | 19.20 seconds | 24.20 seconds |
+| 4 | 17.81 seconds | 22.81 seconds |
+| 5 | 16.61 seconds | 21.61 seconds |
+
+There are more gaps and cracked tiles in every level. Later levels have more frequent gaps. Starts, finishes, and landing tiles stay safe, and every row has a route around its hazards.
+
+Collect **three hearts without falling** to activate a **five-second heart magnet**. It picks up nearby hearts and favorite things. The score card shows the countdown, and the ending shows your best heart streak. Pausing or reaching a level celebration pauses the bonus timer too. A White Peach save keeps your streak; an unprotected fall resets it.
 
 Toolbar buttons now return keyboard focus to the game. A music error arriving before playback or after Pause no longer opens the music controls by itself. Simple comments explain the main parts of the HTML, styling, game code, and tests.
 
@@ -56,7 +60,7 @@ node tests/game-core.test.cjs
 node tests/ui.test.cjs
 ```
 
-The checks simulate complete runs at 30, 60, and 120 steps per second, and verify checkpoints, retries, safe floor boundaries, landing tiles, and collectible placement. The UI checks use a simulated browser and music player. These checks do not verify real browser layout or streamed music.
+The checks simulate complete runs at 30, 60, and 120 steps per second, and verify checkpoints, retries, safe floor boundaries, landing tiles, collectible placement, heart streaks, and magnet timing. The UI checks use a simulated browser and music player. These checks do not verify real browser layout or streamed music.
 
 
 ## Rights

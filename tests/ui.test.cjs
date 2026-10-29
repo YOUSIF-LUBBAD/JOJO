@@ -80,6 +80,9 @@ vm.runInContext(scripts[0], context);
 vm.runInContext(scripts[1], context);
 vm.runInContext(scripts[2], context);
 player.events.onReady();
+let gameState;
+const makeState = context.JojoCore.makeState;
+context.JojoCore.makeState = () => { gameState = makeState(); return gameState; };
 vm.runInContext(scripts[3], context);
 const read = tools.find(tool => tool.name === 'read_jojo_game').execute;
 
@@ -114,12 +117,23 @@ document.hidden = false; document.dispatch('visibilitychange');
 nodes['resume-button'].dispatch('click');
 assert.equal(read({}).mode, 'playing');
 
+// The score card shows the bonus and stops its timer while paused.
+gameState.magnetTime = 4.9; gameState.heartStreak = 3;
+for (let frame = 0; frame < 12; frame++) raf(frame * 1000 / 60);
+assert.match(nodes['streak-status'].textContent, /Heart magnet · 5s/);
+nodes['pause-button'].dispatch('click');
+const remainingBonus = gameState.magnetTime;
+for (let frame = 12; frame < 24; frame++) raf(frame * 1000 / 60);
+assert.equal(gameState.magnetTime, remainingBonus);
 nodes['home-button'].dispatch('click');
 assert.equal(read({}).mode, 'title');
+assert.equal(read({}).heartStreak, 0);
+assert.equal(read({}).magnetTime, 0);
+assert.equal(nodes['streak-status'].textContent, '0 / 3 · heart magnet');
 assert.equal(nodes['win-screen'].hidden, true);
 assert.equal(nodes['title-screen'].hidden, false);
 nodes['choose-golubi'].dispatch('click');
 nodes['play-button'].dispatch('click');
 assert.equal(read({}).level, 1);
 assert.equal(read({}).character, 'golubi');
-console.log('PASS: toolbar focus, music errors, tab pause/resume, and home/replay.');
+console.log('PASS: toolbar focus, music errors, tab pause/resume, bonus display, and home/replay.');
