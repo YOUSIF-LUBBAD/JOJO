@@ -19,7 +19,7 @@ function runChecks(C) {
   const results = [];
   verify(C.STAGE_COUNT === 5, 'The adventure must have five levels.');
   const previousSpeeds = [5.4, 5.9, 6.4, 6.9, 7.4];
-  const expectedDurations = C.LEVEL_SPEEDS.map(speed => 122.88 / speed);
+  const expectedDurations = previousSpeeds.map(speed => 122.88 / speed + 5);
   verify(C.LEVEL_SPEEDS.every((speed, i) => Math.abs(speed / previousSpeeds[i] - 1.25) < 1e-10), 'Every level must be 25 percent faster.');
   // Try the full trip at different frame rates.
   for (const fps of [30, 60, 120]) {
@@ -27,7 +27,7 @@ function runChecks(C) {
     C.reset(state);
     const visited = [state.stage], durations = [];
     let previousTime = 0;
-    while (['playing', 'levelup'].includes(state.mode) && state.runTime < 120) {
+    while (['playing', 'levelup'].includes(state.mode) && state.runTime < 180) {
       if (state.mode === 'levelup') {
         durations.push(state.runTime - previousTime);
         previousTime = state.runTime;
@@ -57,12 +57,14 @@ function runChecks(C) {
     state.fragile = {1: 1};
     C.retry(state);
     verify(state.mode === 'playing' && state.stage === stage, 'Retry the current level.');
-    verify(state.z === stage * C.STAGE_ROWS * C.ROW, 'Retry at the longer level boundary.');
+    verify(state.z === C.LEVEL_STARTS[stage], 'Retry at the exact level boundary.');
     verify(state.speed === C.LEVEL_SPEEDS[stage], 'Retry at the correct speed.');
     verify(Object.keys(state.fragile).length === 0, 'Retry repairs broken tiles.');
-    for (const offset of [0, 1, 2, 3, C.STAGE_ROWS - 4, C.STAGE_ROWS - 3, C.STAGE_ROWS - 2, C.STAGE_ROWS - 1]) {
+    const startRow = Math.floor(C.LEVEL_STARTS[stage] / C.ROW);
+    const endRow = Math.floor(C.LEVEL_ENDS[stage] / C.ROW);
+    const safeRows = [startRow, startRow + 1, startRow + 2, startRow + 3, endRow - 4, endRow - 3, endRow - 2, endRow - 1];
+    for (const row of safeRows) {
       for (let lane = 0; lane < C.LANES; lane++) {
-        const row = stage * C.STAGE_ROWS + offset;
         verify(!C.isGap(row, lane) && !C.isFragile(row, lane), 'Every level begins and ends on safe floor.');
       }
     }
@@ -81,7 +83,7 @@ function runChecks(C) {
   for (let row = 0; row <= C.TOTAL_ROWS; row++) {
     for (const item of C.pickupsFor(row)) {
       verify(!ids.has(item.id), 'Collectibles need unique IDs.');
-      verify(item.z >= 0 && item.z < C.TOTAL_ROWS * C.ROW, 'Keep collectibles inside the route.');
+      verify(item.z >= 0 && item.z < C.TOTAL_DISTANCE, 'Keep collectibles inside the route.');
       ids.add(item.id); kinds.add(item.kind);
     }
   }

@@ -267,19 +267,35 @@ window.JOJO_ATLAS = 'data:image/webp;base64,UklGRnZvAQBXRUJQVlA4WAoAAAAQAAAA/wIA
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
   // This is the size of each floor tile.
-  const LANES = 24, ROW = 3.84, STAGE_ROWS = 32;
+  const LANES = 24, ROW = 3.84;
   // Each level is 25% faster than before.
   const LEVEL_SPEEDS = Object.freeze([6.75, 7.375, 8, 8.625, 9.25]);
-  const STAGE_COUNT = LEVEL_SPEEDS.length, TOTAL_ROWS = STAGE_ROWS * STAGE_COUNT;
+  // These distances keep each level five seconds longer, even at the new speed.
+  const LEVEL_LENGTHS = Object.freeze([187.35, 190.475, 193.6, 196.725, 199.85]);
+  const LEVEL_ENDS = Object.freeze(LEVEL_LENGTHS.map((_, i) => LEVEL_LENGTHS.slice(0, i + 1).reduce((a, b) => a + b, 0)));
+  const LEVEL_STARTS = Object.freeze([0, ...LEVEL_ENDS.slice(0, -1)]);
+  const LEVEL_START_ROWS = Object.freeze(LEVEL_STARTS.map(z => Math.floor(z / ROW)));
+  const STAGE_COUNT = LEVEL_SPEEDS.length, TOTAL_DISTANCE = LEVEL_ENDS[STAGE_COUNT - 1];
+  const TOTAL_ROWS = Math.ceil(TOTAL_DISTANCE / ROW);
   const SPEED = LEVEL_SPEEDS[0], GRAVITY = 13.5, JUMP = 6.7;
   const TREAT_KINDS = ['cat_brown', 'peach', 'takis', 'cat_grey', 'matcha', 'nescafe', 'makeup', 'phone', 'shopping', 'flake', 'bounty'];
   const mod = (n, m) => (n % m + m) % m;
   const speedForStage = stage => LEVEL_SPEEDS[Math.max(0, Math.min(STAGE_COUNT - 1, stage))];
+  function stageAtDistance(z) {
+    const next = LEVEL_ENDS.findIndex(end => z < end);
+    return next < 0 ? STAGE_COUNT - 1 : next;
+  }
+  function stageForRow(row) { return stageAtDistance((row + 1) * ROW - .000001); }
+  // Keep the start and end of every level safe.
+  function isSafeRow(row) {
+    const stage = stageForRow(row);
+    return row < LEVEL_START_ROWS[stage] + 4 || row >= Math.floor(LEVEL_ENDS[stage] / ROW) - 4;
+  }
   const BREAK_DELAY = .42;
   // These tiles break after the runner steps on them.
   function isFragile(row, lane) {
-    const local = mod(row, STAGE_ROWS), stage = Math.floor(row / STAGE_ROWS);
-    return stage > 0 && row < TOTAL_ROWS - 4 && (local === 8 || local === 16)
+    const stage = stageForRow(row), local = row - LEVEL_START_ROWS[stage];
+    return stage > 0 && !isSafeRow(row) && (local === 8 || local === 16)
       && mod(Math.floor(lane) - (stage * 4 + local / 4), LANES) < 3;
   }
   function isOpen(s, row, lane) {
@@ -288,12 +304,10 @@ window.JOJO_ATLAS = 'data:image/webp;base64,UklGRnZvAQBXRUJQVlA4WAoAAAAQAAAA/wIA
   // This decides where the holes go.
   function isGap(row, lane) {
     lane = mod(Math.floor(lane), LANES);
-    if (row < 5 || row >= TOTAL_ROWS - 4) return false;
-    const local = row % STAGE_ROWS;
-    if (local < 4 || local >= STAGE_ROWS - 4) return false;
+    if (row < 5 || isSafeRow(row)) return false;
+    const stage = stageForRow(row), local = row - LEVEL_START_ROWS[stage];
     // Leave a safe landing tile after each hole.
     if (local % 4 !== 2) return false;
-    const stage = Math.floor(row / STAGE_ROWS);
     const anchor = [0, 4, 9, 14][(Math.floor(local / 4) - 1) % 4];
     return mod(lane - anchor, LANES) < 5 + Math.min(3, stage);
   }
@@ -339,8 +353,7 @@ window.JOJO_ATLAS = 'data:image/webp;base64,UklGRnZvAQBXRUJQVlA4WAoAAAAQAAAA/wIA
   function jump(s) { if (s.mode === 'playing') s.jumpBuffer = .15; }
   // Start again at the current level.
   function retry(s) {
-    const row = s.checkpoint * STAGE_ROWS;
-    s.z = row * ROW; s.lane = 1.5; s.height = 0; s.vy = 0;
+    s.z = LEVEL_STARTS[s.checkpoint]; s.lane = 1.5; s.height = 0; s.vy = 0;
     s.jumpBuffer = 0; s.coyote = .1; s.mode = 'playing';
     s.stage = s.checkpoint; s.speed = speedForStage(s.stage); s.fragile = {}; s.event = null;
   }
@@ -353,11 +366,11 @@ window.JOJO_ATLAS = 'data:image/webp;base64,UklGRnZvAQBXRUJQVlA4WAoAAAAQAAAA/wIA
     s.lane = mod(s.lane + movement * dt * 4.4, LANES);
     s.z += s.speed * dt;
     const row = Math.floor(s.z / ROW);
-    const stage = Math.min(STAGE_COUNT - 1, Math.floor(row / STAGE_ROWS));
+    const stage = stageAtDistance(s.z);
     // Stop here to show the level celebration.
     if (stage > s.stage) {
       s.stage = stage; s.checkpoint = stage; s.speed = speedForStage(stage);
-      s.z = stage * STAGE_ROWS * ROW; s.height = s.vy = 0; s.jumpBuffer = 0; s.coyote = .11;
+      s.z = LEVEL_STARTS[stage]; s.height = s.vy = 0; s.jumpBuffer = 0; s.coyote = .11;
       s.mode = 'levelup'; s.event = { type: 'checkpoint', stage }; return;
     }
     // Let cracked tiles fall, then forget tiles far behind us.
@@ -406,11 +419,11 @@ window.JOJO_ATLAS = 'data:image/webp;base64,UklGRnZvAQBXRUJQVlA4WAoAAAAQAAAA/wIA
       } else { s.mode = 'fallen'; s.falls++; s.event = { type: 'fall' }; }
     }
     // Reaching the end wins the game.
-    if (s.z >= TOTAL_ROWS * ROW && s.mode === 'playing') {
+    if (s.z >= TOTAL_DISTANCE && s.mode === 'playing') {
       s.mode = 'won'; s.event = { type: 'win' };
     }
   }
-  return { LANES, ROW, STAGE_ROWS, STAGE_COUNT, TOTAL_ROWS, SPEED, LEVEL_SPEEDS, BREAK_DELAY, TREAT_KINDS, mod, speedForStage, isGap, isFragile, isOpen, pickupFor, pickupsFor, pickupPose, makeState, reset, nextLevel, jump, retry, step };
+  return { LANES, ROW, STAGE_COUNT, TOTAL_ROWS, TOTAL_DISTANCE, LEVEL_LENGTHS, LEVEL_STARTS, LEVEL_ENDS, LEVEL_START_ROWS, SPEED, LEVEL_SPEEDS, stageAtDistance, BREAK_DELAY, TREAT_KINDS, mod, speedForStage, isGap, isFragile, isOpen, pickupFor, pickupsFor, pickupPose, makeState, reset, nextLevel, jump, retry, step };
 });
 </script><script>// Copyright (c) 2026 Yousif Lubbad. See LICENSE and THIRD_PARTY_NOTICES.md.
 // This connects the pink song buttons to the music player.
@@ -871,7 +884,7 @@ window.JOJO_ATLAS = 'data:image/webp;base64,UklGRnZvAQBXRUJQVlA4WAoAAAAQAAAA/wIA
     $('stage-number').textContent = `Level 0${state.stage + 1} / 0${C.STAGE_COUNT}`;
     $('stage-name').textContent = names[state.stage];
     $('pace-label').textContent = `${(state.speed / C.SPEED).toFixed(2)}× pace`;
-    const percent = Math.min(100, Math.floor(state.z / (C.TOTAL_ROWS * C.ROW) * 100));
+    const percent = Math.min(100, Math.floor(state.z / (C.TOTAL_DISTANCE) * 100));
     $('progress-text').textContent = `${percent}%`; $('progress-fill').style.width = `${percent}%`;
     $('progress-bar').setAttribute('aria-valuenow', String(percent));
     $('heart-score').textContent = state.hearts;
@@ -1113,7 +1126,7 @@ window.JOJO_ATLAS = 'data:image/webp;base64,UklGRnZvAQBXRUJQVlA4WAoAAAAQAAAA/wIA
         }
         ctx.restore();
       }
-      if (row % C.STAGE_ROWS === 0 && near > 3) {
+      if (C.LEVEL_START_ROWS.includes(row) && near > 3) {
         ctx.strokeStyle = '#fff3f6'; ctx.lineWidth = Math.max(1, 17 / near); ctx.beginPath();
         for (let lane = 0; lane <= 24; lane++) {
           const point = project(lane, near);
@@ -1138,7 +1151,7 @@ window.JOJO_ATLAS = 'data:image/webp;base64,UklGRnZvAQBXRUJQVlA4WAoAAAAQAAAA/wIA
       }
     }
     // A luminous destination remains visible at the tunnel's vanishing point.
-    const finishApproach = C.TOTAL_ROWS * C.ROW - 28;
+    const finishApproach = C.TOTAL_DISTANCE - 28;
     const endSize = active && state.z > finishApproach ? 34 + (state.z - finishApproach) * 1.8 : 25;
     sprite('envelope', w * .5, h * .41, endSize, reduced ? 0 : Math.sin(clock) * .05);
     if (active && state.mode !== 'won') {
@@ -1221,7 +1234,7 @@ window.JOJO_ATLAS = 'data:image/webp;base64,UklGRnZvAQBXRUJQVlA4WAoAAAAQAAAA/wIA
   const modelContext = document.modelContext;
   if (modelContext?.registerTool) {
     const lifetime = new AbortController();
-    const read = () => ({ mode: state.mode, character, level: state.stage + 1, levels: C.STAGE_COUNT, speed: state.speed, distance: state.z, lane: state.lane, height: state.height, progress: Math.min(100, Math.floor(state.z / (C.TOTAL_ROWS * C.ROW) * 100)), hearts: state.hearts });
+    const read = () => ({ mode: state.mode, character, level: state.stage + 1, levels: C.STAGE_COUNT, speed: state.speed, distance: state.z, lane: state.lane, height: state.height, progress: Math.min(100, Math.floor(state.z / (C.TOTAL_DISTANCE) * 100)), hearts: state.hearts });
     for (const tool of [
       { name: 'read_jojo_game', description: 'Read JOJO game progress.', annotations: { readOnlyHint: true }, execute: input => { if (!input || Object.keys(input).length) throw new Error('No parameters expected'); return read(); } },
       { name: 'start_jojo_game', description: 'Start a new JOJO adventure from level one, resetting current progress.', annotations: { readOnlyHint: false }, execute: input => { if (!input || Object.keys(input).length) throw new Error('No parameters expected'); start(); return read(); } }
