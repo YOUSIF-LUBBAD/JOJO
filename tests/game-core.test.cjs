@@ -17,6 +17,7 @@ function runChecks(C) {
   const verify = (condition, message) => { if (!condition) throw new Error(message); };
   const results = [];
   verify(C.STAGE_COUNT === 5, 'The adventure must have five levels.');
+  verify(Math.abs(C.STAGE_ROWS * C.ROW / (32 * 3.2) - 1.2) < 1e-10, 'Each level must be 20 percent longer than the previous version.');
   verify(JSON.stringify(C.LEVEL_SPEEDS) === JSON.stringify([5.4, 5.9, 6.4, 6.9, 7.4]), 'Keep the existing speed progression.');
   for (const fps of [30, 60, 120]) {
     const state = C.makeState();
@@ -41,8 +42,8 @@ function runChecks(C) {
     verify(state.mode === 'won', 'The full journey must finish at ' + fps + ' fps.');
     verify(JSON.stringify(visited) === '[0,1,2,3,4]', 'Visit each of the five levels in order.');
     verify(state.checkpoint === 4, 'The final checkpoint must be level five.');
-    verify(state.runTime > 80 && state.runTime < 83, 'The longer route should take about 81 seconds without pauses.');
-    verify(durations.every(time => time > 13 && time < 20), 'Each level should take about 14–19 seconds.');
+    verify(state.runTime > 97 && state.runTime < 98, 'The longer route should take about 97 seconds without pauses.');
+    verify(durations.every(time => time > 16 && time < 24), 'Each level should take about 17–23 seconds.');
     results.push(fps + ' fps: all five levels finished in ' + state.runTime.toFixed(2) + ' seconds.');
   }
   for (let stage = 0; stage < C.STAGE_COUNT; stage++) {
@@ -86,3 +87,4 @@ function runChecks(C) {
 }
 
 for (const result of runChecks(moduleScope.exports)) console.log('PASS: ' + result);
+
