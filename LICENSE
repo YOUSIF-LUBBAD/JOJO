@@ -1,22 +1,96 @@
-JOJO — Rights Notice
+JOJO
+PROPRIETARY RIGHTS NOTICE AND LIMITED ACCESS TERMS
 
 Copyright (c) 2026 Yousif Lubbad.
-All rights reserved in original, copyrightable contributions owned by Yousif Lubbad.
+All rights reserved in original copyrightable contributions owned by Yousif Lubbad.
+Notice date: November 1, 2026.
+
+1. SCOPE AND OWNERSHIP
+
+"Covered Material" means original copyrightable expression in this repository's
+source code, object code, tests, documentation, text, designs, and assets, but
+only to the extent owned by Yousif Lubbad and not subject to a separate license.
+It excludes third-party contributions, instructor-supplied material, public-domain
+content, ideas, facts, algorithms as such, general functionality, and expression
+not eligible for copyright. Repository possession or an author label does not
+transfer another person's rights. See OWNERSHIP.md and the third-party notices.
+
+2. RIGHTS RESERVED; NO GENERAL REUSE LICENSE
+
+Except for Section 3, a separate written permission, an applicable prior or
+third-party license, platform terms, or rights under applicable law, no permission
+is granted to reproduce, modify, translate, adapt, distribute, publish, mirror,
+rehost, sublicense, sell, rent, or incorporate Covered Material into another work,
+product, service, assignment, or dataset. These reservations apply to commercial
+and non-commercial reuse. Attribution alone is not permission.
+
+No permission is granted to copy Covered Material for training, fine-tuning,
+or evaluating AI or machine-learning models, or for dataset assembly, where
+that activity requires the copyright holder's permission. This is a reservation
+of rights, not a claim that every such activity is restricted by copyright.
+
+3. LIMITED ACCESS AND EXPRESS PERMISSIONS
 
 You may load and play the official JOJO game for personal, non-commercial use:
 https://yousif-lubbad.github.io/JOJO/
+This includes browser copies needed for that play, only for Covered Material.
 
-Except as allowed by law, GitHub's terms, or a separate applicable license,
-permission to play does not grant permission to rehost, sell, redistribute,
-or reuse the protected parts of this game. For other uses, request permission
-through the owner's profile: https://github.com/YOUSIF-LUBBAD
+Where this repository is public on GitHub, the rights to view and fork through
+GitHub's functionality, and other rights under GitHub's applicable terms, are
+preserved. GitHub's hosting and service rights are also preserved. Those rights
+do not by themselves grant broader permission to reuse Covered Material.
+Private repository access does not authorize disclosure to additional recipients.
 
-Third-party characters, images, recordings, logos, product names, and other
-third-party material are excluded from this ownership claim and permission.
-They remain subject to their owners' rights and terms. See THIRD_PARTY_NOTICES.md.
-No claim is made over game ideas, general mechanics, public-domain material,
-or material that is not eligible for copyright protection.
+4. PRIOR LICENSES, THIRD-PARTY MATERIAL, AND LEGAL EXCEPTIONS
 
-This notice is not a copyright registration, trademark registration, or proof
-that third-party content has been licensed. It does not restrict rights that
-applicable law or platform terms already give you.
+Existing licenses and permissions remain effective for material they cover.
+This notice does not revoke or narrow rights already granted in earlier releases,
+or impose additional restrictions on separately licensed material. Its presence
+in a folder, archive, compiled file, or derivative work does not change those
+boundaries. A third-party license governs its own material if terms conflict.
+
+No provision limits fair use, fair dealing, or another exception or right that
+applicable law protects. Nothing grants ownership of third-party code, music,
+photographs, characters, marks, course materials, or other excluded content.
+Credits are not proof of permission. No patent or trademark license is granted.
+
+5. ATTRIBUTION AND AUTHORIZATION
+
+Preserve applicable copyright, authorship, attribution, and license notices in
+copies made under this notice. Do not misrepresent Covered Material as your own
+creation or imply the owner's endorsement. Seek written permission before uses
+not already authorized. Permission must identify the material, purpose, scope,
+and duration; silence, public availability, or a repository fork is not consent.
+Contact Yousif Lubbad through the contact information published on his profile:
+https://github.com/YOUSIF-LUBBAD
+
+6. CONTRIBUTIONS
+
+Contributor rights are not automatically transferred to the repository owner.
+External contributions require the advance agreement described in CONTRIBUTING.md.
+Only a person with the necessary rights may authorize additional use or a change
+of license. This notice does not claim exclusive ownership of others' work.
+
+7. WARRANTY AND LIABILITY
+
+TO THE EXTENT PERMITTED BY APPLICABLE LAW, COVERED MATERIAL IS PROVIDED AS IS,
+WITHOUT WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+NONINFRINGEMENT, OR OTHER EXPRESS OR IMPLIED WARRANTIES. TO THAT SAME EXTENT,
+YOUSIF LUBBAD IS NOT LIABLE FOR LOSS OR DAMAGE ARISING FROM ACCESS TO OR USE OF
+COVERED MATERIAL. These limitations do not exclude liability that law prohibits
+excluding, and do not replace warranties or terms in a separate agreement.
+
+8. ENFORCEMENT AND INTERPRETATION
+
+The owner reserves the right to request removal of infringing copies and seek
+remedies available under applicable law. This notice creates no automatic fine,
+guaranteed damages, or presumption of infringement. Enforceability and remedies
+depend on applicable law and the facts. A delay in enforcement does not itself
+grant a reuse license. An unenforceable provision applies only to the extent
+permitted by law, without expanding any license.
+
+This notice records a reservation of rights and express permissions. It does not
+assert copyright registration, patent protection, trademark registration, or a
+transfer of ownership, and does not create a signed contract merely by viewing
+this repository. All rights not expressly granted remain reserved, subject to
+the exceptions above.

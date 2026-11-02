@@ -70,9 +70,10 @@ node tests/ui.test.cjs
 
 The checks simulate complete runs at 30, 60, and 120 steps per second, and verify checkpoints, retries, safe floor boundaries, landing tiles, collectible placement, heart streaks, and magnet timing. The UI checks cover frame pacing, drawing size limits, resize reuse, automatic graphics scaling, and the Arabic ending, using a simulated browser and music player. These checks do not verify real browser layout or streamed music.
 
+## Ownership and reuse
 
-## Rights
+Copyright (c) 2026 Yousif Lubbad, for original copyrightable contributions he owns. **All rights reserved. No general reuse license is granted.**
 
-© 2026 Yousif Lubbad, for original copyrightable contributions owned by Yousif Lubbad. See [LICENSE](LICENSE) for the permission to play and limits on reuse.
+See [LICENSE](LICENSE) for the exact permissions, restrictions, and exceptions; [OWNERSHIP.md](OWNERSHIP.md) for project-specific boundaries; and [third-party notices](THIRD_PARTY_NOTICES.md) for excluded material. Applicable platform rights, legal exceptions, and existing licenses remain effective. Personal, non-commercial play of the official game remains permitted.
 
-Third-party artwork, brands, and recordings are excluded. Their credits and known permission limits are in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). This is a rights notice, not a registration or a commercial-use clearance.
+For permission requests, contact [Yousif Lubbad](https://github.com/YOUSIF-LUBBAD). Read [CONTRIBUTING.md](CONTRIBUTING.md) before proposing code or assets.
